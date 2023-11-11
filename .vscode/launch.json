@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "name": "Python: Debug Program",
+          "type": "python",
+          "request": "launch",
+          "module": "main",
+          "args": [
+              "demo",
+              "/home/azureuser/mistral-7B-v0.1"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      }
+  ]
+}
