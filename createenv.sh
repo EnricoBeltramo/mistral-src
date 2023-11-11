@@ -3,24 +3,11 @@
 # wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
 # bash Anaconda3-2023.09-0-Linux-x86_64.sh -b
 # rm -rf Anaconda3-2023.09-0-Linux-x86_64.sh
+# echo 'export PATH="$HOME/anaconda3/bin:$PATH"' >> ~/.bashrc
+# source ~/.bashrc
 
-# # Il percorso in cui Anaconda è stato installato (modifica se necessario)
-# ANACONDA_PATH="$HOME/anaconda3"
-
-# # Verifica se il percorso di Anaconda è già nel PATH
-# if [[ ":$PATH:" != *":$ANACONDA_PATH/bin:"* ]]; then
-#     # Aggiunge il percorso di Anaconda al PATH nel file .bashrc
-#     echo "Aggiungo Anaconda al PATH nel file .bashrc"
-#     echo -e "\n# Aggiunge Anaconda al PATH" >> ~/.bashrc
-#     echo "export PATH=\"$ANACONDA_PATH/bin:\$PATH\"" >> ~/.bashrc
-    
-#     # Ricarica .bashrc per applicare le modifiche
-#     source ~/.bashrc
-
-#     echo "Anaconda è stato aggiunto al tuo PATH."
-# else
-#     echo "Anaconda è già nel PATH."
-# fi
+# eval "$(conda shell.bash hook)"
+# conda init
 
 git config --global credential.helper cache
 git config --global credential.helper 'cache --timeout=36000000'
