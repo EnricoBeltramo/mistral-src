@@ -6,3 +6,16 @@ git config --global credential.helper 'cache --timeout=36000000'
 git config --global user.email "beltramoe@gmail.com"
 git config --global user.name "beltramoe"
 -- END: per configurare git
+
+--- START: configurare conda
+
+scaricare da qui:
+wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
+bash Anaconda3-2023.09-0-Linux-x86_64.sh -b
+
+nano ~/.bashrc
+aggiungere:
+export PATH="$HOME/anaconda3/bin:$PATH"
+ctrl + x per salvare
+source ~/.bashrc
+--- END: configurare conda
