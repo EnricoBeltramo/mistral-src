@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
+# bash Anaconda3-2023.09-0-Linux-x86_64.sh -b
+# rm -rf Anaconda3-2023.09-0-Linux-x86_64.sh
+
 # # Il percorso in cui Anaconda è stato installato (modifica se necessario)
 # ANACONDA_PATH="$HOME/anaconda3"
 
@@ -18,14 +22,11 @@
 #     echo "Anaconda è già nel PATH."
 # fi
 
-# git config --global credential.helper cache
-# git config --global credential.helper 'cache --timeout=36000000'
+git config --global credential.helper cache
+git config --global credential.helper 'cache --timeout=36000000'
 
-# git config --global user.email "beltramoe@gmail.com"
-# git config --global user.name "beltramoe"
-
-wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
-bash Anaconda3-2023.09-0-Linux-x86_64.sh -b
+git config --global user.email "beltramoe@gmail.com"
+git config --global user.name "beltramoe"
 
 eval "$(conda shell.bash hook)"
 conda remove -n mistral-env -y --all

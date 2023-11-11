@@ -1,4 +1,31 @@
 
+
+--- START: installare driver CUDA
+
+da chaggpt: 
+
+sudo apt update
+sudo apt upgrade
+
+sudo bash -c "echo blacklist nouveau > /etc/modprobe.d/blacklist-nvidia-nouveau.conf"
+sudo bash -c "echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nvidia-nouveau.conf"
+
+sudo update-initramfs -u
+sudo reboot
+sudo apt install ubuntu-drivers-common
+
+# vedere la lista dei driver:
+ubuntu-drivers devices
+
+# per installare driver:
+sudo apt install nvidia-driver-535
+
+sudo reboot
+
+nvidia-smi
+
+-- END: installare driver CUDA
+
 --- START: per configurare git 
 git config --global credential.helper cache
 git config --global credential.helper 'cache --timeout=36000000'
@@ -8,7 +35,6 @@ git config --global user.name "beltramoe"
 -- END: per configurare git
 
 --- START: configurare conda
-
 scaricare da qui:
 wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
 bash Anaconda3-2023.09-0-Linux-x86_64.sh -b
