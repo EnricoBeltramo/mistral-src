@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
       {
-          "name": "Python: Debug Program",
+          "name": "Demo",
           "type": "python",
           "request": "launch",
           "module": "main",
@@ -13,6 +13,32 @@
           ],
           "console": "integratedTerminal",
           "justMyCode": true
-      }
+      },
+      {
+        "name": "Interactive",
+        "type": "python",
+        "request": "launch",
+        "module": "main",
+        "args": [
+            "interactive",
+            "--model_path",
+            "/home/azureuser/mistral-7B-v0.1"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": true
+    },
+    {
+        "name": "Test generate",
+        "type": "python",
+        "request": "launch",
+        "module": "main",
+        "args": [
+            "test_generate",
+            "--model_path",
+            "/home/azureuser/mistral-7B-v0.1"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": true
+    }
   ]
 }
