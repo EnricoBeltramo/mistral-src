@@ -187,11 +187,11 @@ class RotatingBufferCache:
             for seqlen in seqlens
         ]
         # .concatenate mask in a single tensor array
-        # only n sliding window for each element are true 
-        # [False, False, True, True, True |  False, False, False, False, True, True, True | True, True]
+        # .only latest n sliding window for each element are true 
+        # .[False, False, True, True, True |  False, False, False, False, True, True, True | True, True]
         to_cache_mask = torch.tensor(sum(masks, []), device=self.device, dtype=torch.bool)
         # .get the length of each cached list a single tensor array
-        # . i.e. [3, 3, 3] but if last  element is smaller than slliding windows ( 2 < 3) we have [3,3,2]
+        # . i.e. [3, 3, 3] but if last  element is smaller than sliding windows ( 2 < 3) we have [3,3,2]
         cached_elements = torch.tensor([sum(mask) for mask in masks], device=self.device, dtype=torch.long)
         # .calculate the relative position of each new token in its batch
         # .[0, 1, 2, 3, 4 | 0, 1, 2, 3, 4, 5, 6 | 0, 1]
@@ -203,6 +203,7 @@ class RotatingBufferCache:
         # first clip on max of array, because is a rotate array -> the the elements wrap when go out of array
         # after add base position
         # (.[0, 1, 2, 3, 4 | 0, 1, 2, 3, 4, 5, 6 | 0, 1] % 3) + [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 6, 6]
+        # (.[0, 1, 2, 0, 1 | 0, 1, 2, 0, 1, 2, 0 | 0, 1] % 3) + [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 6, 6]
         # .[0, 1, 2, 0, 1 | 3, 4, 5, 3, 4, 5, 3 | 6, 7]
         # only those element are really used:
         # .[2, 0, 1 | 4, 5, 3 | 6, 7]
