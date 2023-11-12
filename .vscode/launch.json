@@ -8,6 +8,7 @@
           "module": "main",
           "args": [
               "demo",
+              "--model_path",
               "/home/azureuser/mistral-7B-v0.1"
           ],
           "console": "integratedTerminal",

@@ -1,6 +1,7 @@
 from mistral.cache import RotatingBufferCache
 import torch
-import fire
+#import fire
+import argparse  # Importa argparse invece di fire
 from typing import List
 from pathlib import Path
 
@@ -136,8 +137,21 @@ def demo(model_path: str, max_tokens: int = 35, temperature: float = 0):
         print(x)
         print("=====================")
 
+# if __name__ == "__main__":
+#     fire.Fire({
+#         "interactive": interactive,
+#         "demo": demo,
+#     })
+
 if __name__ == "__main__":
-    fire.Fire({
-        "interactive": interactive,
-        "demo": demo,
-    })
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command', choices=['interactive', 'demo'])
+    parser.add_argument('--model_path', type=str, required=True)
+    parser.add_argument('--max_tokens', type=int, default=35)
+    parser.add_argument('--temperature', type=float, default=0.7)
+    args = parser.parse_args()
+
+    if args.command == 'interactive':
+        interactive(args.model_path, max_tokens=args.max_tokens, temperature=args.temperature)
+    elif args.command == 'demo':
+        demo(args.model_path, max_tokens=args.max_tokens, temperature=args.temperature)
