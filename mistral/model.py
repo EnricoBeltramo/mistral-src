@@ -90,10 +90,15 @@ class Attention(nn.Module):
     ) -> torch.Tensor:
         seqlen_sum, _ = x.shape
 
+        # .calculate new values for new input x
         xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
+
+        # reshape
         xq = xq.view(seqlen_sum, self.n_heads, self.args.head_dim)
         xk = xk.view(seqlen_sum, self.n_kv_heads, self.args.head_dim)
         xv = xv.view(seqlen_sum, self.n_kv_heads, self.args.head_dim)
+
+        # .apply rotational embedding to query and key
         xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
 
         if cache is None:
@@ -102,18 +107,25 @@ class Attention(nn.Module):
             key, val = cache.interleave_kv(xk, xv)
             cache.update(xk, xv)
         else: 
+            # .update cache with new values
             cache.update(xk, xv)
+            # get new cached values
             key, val = cache.key, cache.value
+            # reshape
             key = key.view(seqlen_sum * cache.sliding_window, self.n_kv_heads, self.args.head_dim)
             val = val.view(seqlen_sum * cache.sliding_window, self.n_kv_heads, self.args.head_dim)
 
         # Repeat keys and values to match number of query heads
+        # this is the grouped query attention (4 as default)
         key, val = repeat_kv(key, val, self.repeats, dim=1)
 
         # xformers requires (B=1, S, H, D)
         xq, key, val = xq[None, ...], key[None, ...], val[None, ...]
+        # .xq take account of only latest value
+        # .key val of previous too
         output = memory_efficient_attention(xq, key, val, None if cache is None else cache.mask)
 
+        # apply output matrix
         return self.wo(output.view_as(x))
 
 
@@ -231,12 +243,14 @@ class Transformer(nn.Module):
 
         # for each layer
         for layer_id, layer in enumerate(self.layers):
-            # get the layer cache
+            # .get the layer cache
             cache_view = None if cache is None else cache.get_view(layer_id, input_metadata)
-            # apply new layer. The result h will be applied to new layer
+            # .apply new layer. The result h will be applied to next layer
             h = layer(h, freqs_cis, cache_view)
         
+        # if cache present
         if cache is not None:
+            # update the new seq lens
             cache.update_seqlens(seqlens)
 
         return self.norm(h)
