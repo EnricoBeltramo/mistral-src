@@ -56,11 +56,17 @@ def generate(prompts: List[str], model: Transformer, tokenizer: Tokenizer, *, ma
         chunk_size = max_prompt_len
 
     # Encode prompt by chunks
+    # each prompt is split in chunk size
     for s in range(0, max_prompt_len, chunk_size):
+        # take the chunck of prompt
         prompt_chunks = [p[s:s+chunk_size] for p in encoded_prompts]
+        # check there are prompts
         assert all(len(p) > 0 for p in prompt_chunks)
+        # analize prompts
         prelogits = model.forward(
+            # the prompts are concatenated in a single tensor array
             torch.tensor(sum(prompt_chunks, []), device=model.device, dtype=torch.long),
+            # set an array with alle length of prompts
             seqlens=[len(p) for p in prompt_chunks],
             cache=cache
         )

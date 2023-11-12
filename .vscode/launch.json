@@ -12,7 +12,7 @@
               "/home/azureuser/mistral-7B-v0.1"
           ],
           "console": "integratedTerminal",
-          "justMyCode": true
+          "justMyCode": false
       },
       {
         "name": "Interactive",
@@ -25,20 +25,16 @@
             "/home/azureuser/mistral-7B-v0.1"
         ],
         "console": "integratedTerminal",
-        "justMyCode": true
+        "justMyCode": false
     },
     {
         "name": "Test generate",
         "type": "python",
         "request": "launch",
-        "module": "main",
-        "args": [
-            "test_generate",
-            "--model_path",
-            "/home/azureuser/mistral-7B-v0.1"
-        ],
+        "module": "test_generate",
+        "args": [],
         "console": "integratedTerminal",
-        "justMyCode": true
+        "justMyCode": false
     }
   ]
 }

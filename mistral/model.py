@@ -214,17 +214,26 @@ class Transformer(nn.Module):
         seqlens: List[int],
         cache: Optional[RotatingBufferCache]=None,
     ) -> torch.Tensor:
+        # validity checks
         assert len(seqlens) <= self.args.max_batch_size, f"Max batch size is {self.args.max_batch_size}, got batch size of {len(seqlens)}"
         assert sum(seqlens) == input_ids.shape[0], (sum(seqlens), input_ids.shape[0])
+        # if cache present
         if cache is not None:
+            # take the cache
             input_metadata = cache.get_input_metadata(seqlens)
         else:
+            # else generate from scratch
             input_metadata = SimpleInputMetadata.from_seqlens(seqlens, self.device)
+        # get the embedding from input tokens
         h = self.tok_embeddings(input_ids)
+        # apply positional rotation encoder
         freqs_cis = self.freqs_cis[input_metadata.positions]
 
+        # for each layer
         for layer_id, layer in enumerate(self.layers):
+            # get the layer cache
             cache_view = None if cache is None else cache.get_view(layer_id, input_metadata)
+            # apply new layer. The result h will be applied to new layer
             h = layer(h, freqs_cis, cache_view)
         
         if cache is not None:
@@ -238,6 +247,7 @@ class Transformer(nn.Module):
         seqlens: List[int],
         cache: Optional[RotatingBufferCache]=None,
     ) -> torch.Tensor:
+        # apply attention firsth and after apply output layer
         return self.output(self.forward_partial(
             input_ids, seqlens, cache=cache
         )).float()

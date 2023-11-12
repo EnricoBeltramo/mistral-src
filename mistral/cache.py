@@ -160,7 +160,7 @@ class RotatingBufferCache:
 
     def get_input_metadata(self, seqlens: List[int]) -> RotatingCacheInputMetadata:
         """
-            inpput = seqlens [5,7,2] // seqpos [0, 1, 3] // sliding_window 3
+            input = seqlens [5,7,2] // seqpos [0, 1, 3] // sliding_window 3
             --> only cache last 3 tokens in each sequence
             - to_cache_mask = [0 0 1 1 1 | 0 0 0 0 1 1 1 | 1 1]
             - cached_elements = [3 | 3 | 2]
@@ -169,25 +169,51 @@ class RotatingBufferCache:
             --> cache positions are positions cache_masked, modulo sliding_window + batch_idx * sliding_window
             - cache_positions = [2 0 1 | 5 3 4 | 6 7]
         """
+        # .if no cache present
         if self.kv_seqlens is None:
+            # .generate a cache of batch size
             self.init_kvseqlens(len(seqlens))
         assert len(seqlens) == len(self.kv_seqlens), f"Batch size is {len(self.kv_seqlens)}, got {len(seqlens)}, did you forget to reset cache?"
+        # .convert to list, here there are the len of each element in sequence
+        # if previous was a sequ len of [5,7,2] we have [5, 7, 2]
         seqpos = self.kv_seqlens.tolist()
 
         assert len(seqlens) > 0, seqlens
+        # .calculate the mask
+        # .false for element outside of sliding window
+        # .true for the latest in sliding_window element
         masks = [
             [x >= seqlen - self.sliding_window for x in range(seqlen)]
             for seqlen in seqlens
         ]
+        # .concatenate mask in a single tensor array
+        # only n sliding window for each element are true 
+        # [False, False, True, True, True |  False, False, False, False, True, True, True | True, True]
         to_cache_mask = torch.tensor(sum(masks, []), device=self.device, dtype=torch.bool)
+        # .get the length of each cached list a single tensor array
+        # . i.e. [3, 3, 3] but if last  element is smaller than slliding windows ( 2 < 3) we have [3,3,2]
         cached_elements = torch.tensor([sum(mask) for mask in masks], device=self.device, dtype=torch.long)
+        # .calculate the relative position of each new token in its batch
+        # .[0, 1, 2, 3, 4 | 0, 1, 2, 3, 4, 5, 6 | 0, 1]
         positions = torch.cat([torch.arange(pos, pos + seqlen) for pos, seqlen in zip(seqpos, seqlens)]).to(device=self.device, dtype=torch.long)
+        # .create an array where for each token write its position in sequence array
+        # .i.e [0 0 0 0 1 1 1 1 2 2 2 2]
         batch_idx = torch.tensor(sum([[i]*seqlen for i, seqlen in enumerate(seqlens)], []), device=self.device, dtype=torch.long)
-        cache_positions = positions % self.sliding_window + batch_idx * self.sliding_window
+        # .calculate position in sequence array
+        # first clip on max of array, because is a rotate array -> the the elements wrap when go out of array
+        # after add base position
+        # (.[0, 1, 2, 3, 4 | 0, 1, 2, 3, 4, 5, 6 | 0, 1] % 3) + [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 6, 6]
+        # .[0, 1, 2, 0, 1 | 3, 4, 5, 3, 4, 5, 3 | 6, 7]
+        # only those element are really used:
+        # .[2, 0, 1 | 4, 5, 3 | 6, 7]
+        cache_positions = (positions % self.sliding_window) + batch_idx * self.sliding_window
 
+        # check if is first call, no yet init
         first_prefill = seqpos[0] == 0
         subsequent_prefill = any(seqlen > 1 for seqlen in seqlens)
+        # if is first call 
         if first_prefill:
+            # init the mask
             assert all([pos == 0 for pos in seqpos]), (seqpos)
             mask = BlockDiagonalCausalMask.from_seqlens(seqlens).make_local_attention(self.sliding_window)
         elif subsequent_prefill:
@@ -196,12 +222,14 @@ class RotatingBufferCache:
                 kv_seqlen=[s + cached_s.clamp(max=self.sliding_window).item() for (s, cached_s) in zip(seqlens, self.kv_seqlens)]
             ).make_local_attention_from_bottomright(self.sliding_window)
         else:
+            # next calls
             mask = BlockDiagonalCausalWithOffsetPaddedKeysMask.from_seqlens(
                 q_seqlen=seqlens,
                 kv_padding=self.sliding_window,
                 kv_seqlen=(self.kv_seqlens + cached_elements).clamp(max=self.sliding_window).tolist()
             )
 
+        # create a support class with returned class
         return RotatingCacheInputMetadata(
             positions=positions,
             to_cache_mask=to_cache_mask,

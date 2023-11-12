@@ -32,7 +32,8 @@ class DebugTokenizer:
 def test_generation():
     torch.manual_seed(42)
 
-    sequences = ["1 2 3 4 5 6 7", "0 1 2", "12 13 14", "2 4 34"]
+    #sequences = ["1 2 3 4 5 6 7", "0 1 2", "12 13 14", "2 4 34"]
+    sequences = ["1 2 3 4", "1 2 3 4 5 6", "1"]
     args = ModelArgs(
         dim=512,
         n_layers=1,
