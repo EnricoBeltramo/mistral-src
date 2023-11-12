@@ -25,7 +25,7 @@
             "/home/azureuser/mistral-7B-v0.1"
         ],
         "console": "integratedTerminal",
-        "justMyCode": false
+        "justMyCode": true
     },
     {
         "name": "Test generate",

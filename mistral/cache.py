@@ -182,6 +182,7 @@ class RotatingBufferCache:
         # .calculate the mask
         # .false for element outside of sliding window
         # .true for the latest in sliding_window element
+        # .[[False, False, True, True, True], [False, False, False, False, True, True, True], [True, True]]
         masks = [
             [x >= seqlen - self.sliding_window for x in range(seqlen)]
             for seqlen in seqlens

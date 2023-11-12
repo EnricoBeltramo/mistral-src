@@ -55,23 +55,25 @@ def generate(prompts: List[str], model: Transformer, tokenizer: Tokenizer, *, ma
     if chunk_size is None:
         chunk_size = max_prompt_len
 
-    # Encode prompt by chunks
+    # .1) Encode input prompt by chunks
     # each prompt is split in chunk size
     for s in range(0, max_prompt_len, chunk_size):
-        # take the chunck of prompt
+        # .take the chunck of prompt
         prompt_chunks = [p[s:s+chunk_size] for p in encoded_prompts]
-        # check there are prompts
+        # .check there are prompts
         assert all(len(p) > 0 for p in prompt_chunks)
-        # analize prompts
+        # analize prompts and calculate logistic
         prelogits = model.forward(
-            # the prompts are concatenated in a single tensor array
+            # .the prompts are concatenated in a single tensor array
             torch.tensor(sum(prompt_chunks, []), device=model.device, dtype=torch.long),
-            # set an array with alle length of prompts
+            # .set an array with all length of prompts
             seqlens=[len(p) for p in prompt_chunks],
             cache=cache
         )
+        # .apply soft max to logistic
         logits = torch.log_softmax(prelogits, dim=-1)
 
+        # .check if is batch next to first one
         if last_token_prelogits is not None:
             # Pass > 1
             last_token_logits = torch.log_softmax(last_token_prelogits, dim=-1)
@@ -86,17 +88,26 @@ def generate(prompts: List[str], model: Transformer, tokenizer: Tokenizer, *, ma
         last_token_prelogits = prelogits.index_select(0, torch.tensor([len(p) for p in prompt_chunks], device=prelogits.device).cumsum(dim=0) - 1)
         assert last_token_prelogits.shape == (B, V)
 
+    # .2) continue the input generating tokens one by one
     # decode
     generated_tokens = []
     for i_token in range(max_tokens):
+        # .get the next tokens to add to sequence
         next_token = sample(last_token_prelogits, temperature=temperature, top_p=0.8)
 
+        # .calculate soft max
         last_token_logits = torch.log_softmax(last_token_prelogits, dim=-1)
         for i in range(B):
+            # store the probs
             logprobs[i].append(last_token_logits[i, next_token[i]].item())
 
+        # add the token to output
         generated_tokens.append(next_token[:, None])
+
+        # .calculate the next token considering the new generated
         last_token_prelogits = model.forward(next_token, seqlens=[1] * len(prompts), cache=cache)
+
+        # ensure shape coherence
         assert last_token_prelogits.shape == (B, V)
 
     generated_words = []
